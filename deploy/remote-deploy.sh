@@ -25,5 +25,6 @@ if [ ! -t 0 ]; then
 fi
 
 docker compose pull
+docker compose down -v --remove-orphans
 docker compose up -d --remove-orphans
 docker image prune -f
