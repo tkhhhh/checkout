@@ -17,6 +17,7 @@ type Config struct {
 	JWTSecret      []byte
 	JWTTTL         time.Duration
 	AllowedOrigins []string
+	AdminPassword  string
 }
 
 func Load() *Config {
@@ -33,6 +34,7 @@ func Load() *Config {
 		JWTSecret:      []byte(mustGetenv("JWT_SECRET")),
 		JWTTTL:         time.Duration(ttlHours) * time.Hour,
 		AllowedOrigins: strings.Split(getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:5174"), ","),
+		AdminPassword:  mustGetenv("ADMIN_PASSWORD"),
 	}
 }
 
