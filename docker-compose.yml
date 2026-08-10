@@ -1,0 +1,66 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-checkout}
+      POSTGRES_USER: ${POSTGRES_USER:-checkout}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-checkout}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-checkout} -d ${POSTGRES_DB:-checkout}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    environment:
+      PORT: "8080"
+      ENV: ${ENV:-development}
+      DATABASE_URL: postgres://${POSTGRES_USER:-checkout}:${POSTGRES_PASSWORD:-checkout}@db:5432/${POSTGRES_DB:-checkout}?sslmode=disable
+      JWT_SECRET: ${JWT_SECRET:-please-change-me}
+      JWT_TTL_HOURS: ${JWT_TTL_HOURS:-24}
+      # Same-origin through the proxy — CORS not actually triggered, but kept
+      # permissive so direct tooling calls still work.
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-*}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  storefront:
+    build:
+      context: ./storefront
+      # Empty base — the frontend prepends /api itself, so calls become
+      # same-origin /api/... and land on the proxy.
+      args:
+        VITE_API_URL: ""
+    restart: unless-stopped
+    depends_on:
+      - backend
+
+  admin:
+    build:
+      context: ./admin
+      args:
+        VITE_API_URL: ""
+    restart: unless-stopped
+    depends_on:
+      - backend
+
+  proxy:
+    build:
+      context: ./proxy
+    restart: unless-stopped
+    depends_on:
+      - backend
+      - storefront
+      - admin
+    ports:
+      - "${PROXY_PORT:-80}:80"
+
+volumes:
+  db_data:
