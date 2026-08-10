@@ -32,7 +32,7 @@ func Load() *Config {
 		DatabaseURL:    mustGetenv("DATABASE_URL"),
 		JWTSecret:      []byte(mustGetenv("JWT_SECRET")),
 		JWTTTL:         time.Duration(ttlHours) * time.Hour,
-		AllowedOrigins: strings.Split(getenv("ALLOWED_ORIGINS", "*"), ","),
+		AllowedOrigins: strings.Split(getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:5174"), ","),
 	}
 }
 
