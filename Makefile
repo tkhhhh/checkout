@@ -8,6 +8,7 @@ help:
 	@echo "  make up          Start the full stack (db + backend + storefront + admin)"
 	@echo "  make down        Stop the stack"
 	@echo "  make restart     Restart the stack"
+	@echo "  make reset       Wipe volumes and rebuild the stack"
 	@echo "  make logs        Tail logs for all services"
 	@echo "  make ps          Show running containers"
 	@echo "  make backend-sh  Shell into the backend container"
@@ -33,6 +34,11 @@ down:
 
 .PHONY: restart
 restart: down up
+
+.PHONY: reset
+reset:
+	$(COMPOSE) down -v --remove-orphans
+	$(COMPOSE) up -d --build
 
 .PHONY: logs
 logs:
