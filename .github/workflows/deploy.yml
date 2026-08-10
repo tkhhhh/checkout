@@ -10,11 +10,12 @@ name: deploy
 #   DEPLOY_PATH          directory on the server, e.g. /opt/checkout
 #   POSTGRES_PASSWORD    Postgres password for the checkout DB
 #   JWT_SECRET           JWT signing secret for the backend
+#   ADMIN_PASSWORD       Password seeded (upserted) for admin@example.com on boot
 #
 # Optional secrets:
 #   DEPLOY_SSH_PORT      SSH port (default 22)
 #   PROXY_PORT           public port the nginx proxy binds on the host (default 80)
-#   ALLOWED_ORIGINS      backend CORS allowlist (default *)
+#   ALLOWED_ORIGINS      backend CORS allowlist (default http://$DEPLOY_SSH_HOST)
 #
 # One-time server setup (CentOS / RHEL / Rocky / Alma — Stream 8+):
 #   sudo bash deploy/bootstrap-centos.sh <deploy-user> <deploy-path>
@@ -125,8 +126,10 @@ jobs:
           IMAGE_NAMESPACE:   ${{ env.IMAGE_NAMESPACE }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           JWT_SECRET:        ${{ secrets.JWT_SECRET }}
+          ADMIN_PASSWORD:    ${{ secrets.ADMIN_PASSWORD }}
           PROXY_PORT:        ${{ secrets.PROXY_PORT }}
           ALLOWED_ORIGINS:   ${{ secrets.ALLOWED_ORIGINS }}
+          DEPLOY_SSH_HOST:   ${{ secrets.DEPLOY_SSH_HOST }}
         run: |
           umask 077
           IMAGE_TAG="sha-${GITHUB_SHA:0:7}"
@@ -138,8 +141,9 @@ jobs:
           POSTGRES_USER=checkout
           POSTGRES_PASSWORD="$POSTGRES_PASSWORD"
           JWT_SECRET="$JWT_SECRET"
+          ADMIN_PASSWORD="$ADMIN_PASSWORD"
           JWT_TTL_HOURS=24
-          ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-*}
+          ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://$DEPLOY_SSH_HOST}
           PROXY_PORT=${PROXY_PORT:-80}
           EOF
 

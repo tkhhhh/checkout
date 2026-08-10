@@ -35,6 +35,10 @@ func main() {
 		log.Fatalf("migrate: %v", err)
 	}
 
+	if err := db.SeedAdmin(ctx, pool, cfg.AdminPassword); err != nil {
+		log.Fatalf("seed admin: %v", err)
+	}
+
 	auth := &handlers.AuthHandler{DB: pool, Secret: cfg.JWTSecret, TTL: cfg.JWTTTL}
 	products := &handlers.ProductHandler{DB: pool}
 	orders := &handlers.OrderHandler{DB: pool}
@@ -47,11 +51,10 @@ func main() {
 	r.Use(chimw.Recoverer)
 	r.Use(chimw.Timeout(30 * time.Second))
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   cfg.AllowedOrigins,
-		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Authorization", "Content-Type"},
-		AllowCredentials: true,
-		MaxAge:           300,
+		AllowedOrigins: cfg.AllowedOrigins,
+		AllowedMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowedHeaders: []string{"Authorization", "Content-Type"},
+		MaxAge:         300,
 	}))
 
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {

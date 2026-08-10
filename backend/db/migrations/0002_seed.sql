@@ -1,11 +1,6 @@
 -- Idempotent seed: only inserts when the table is empty so re-runs are safe.
-
-INSERT INTO users (email, password_hash, name, role)
-SELECT 'admin@example.com',
-       -- bcrypt of "admin123" (cost 10)
-       '$2a$10$FpILvp31WSrk0xqZ2IoejevCquS338UEJwwLtDeY38yh2Tl0lw7PW',
-       'Admin User', 'admin'
-WHERE NOT EXISTS (SELECT 1 FROM users WHERE email='admin@example.com');
+-- The admin user is seeded from the ADMIN_PASSWORD env var in Go
+-- (see backend/db/seed.go), not here — SQL can't bcrypt at runtime.
 
 INSERT INTO products (sku, name, description, price_cents, stock, image_url, active)
 SELECT * FROM (VALUES
