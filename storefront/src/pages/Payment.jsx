@@ -3,6 +3,7 @@ import { useNavigate, useParams, Link } from 'react-router-dom'
 import { api } from '../api.js'
 import { useAuth } from '../store/auth.jsx'
 import { money } from '../format.js'
+import PayPal from '../components/PayPal.jsx'
 
 const formatCard = (v) =>
   v.replace(/\D/g, '').slice(0, 19).replace(/(.{4})/g, '$1 ').trim()
@@ -37,6 +38,7 @@ export default function Payment() {
   })
   const [err, setErr] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [method, setMethod] = useState('card')
 
   useEffect(() => {
     api.getOrder(id, auth.token)
@@ -87,6 +89,33 @@ export default function Payment() {
         Order <strong>#{order.id}</strong> · total <strong>{money(order.total_cents)}</strong>
       </p>
 
+      <div className="row" style={{gap:8, marginBottom:16, justifyContent:'flex-start'}}>
+        <button type="button"
+                onClick={() => setMethod('card')}
+                style={{
+                  background: method === 'card' ? 'var(--accent)' : '#fff',
+                  color: method === 'card' ? '#fff' : 'var(--fg)',
+                  border: '1px solid var(--border)',
+                }}>
+          Card
+        </button>
+        <button type="button"
+                onClick={() => setMethod('paypal')}
+                style={{
+                  background: method === 'paypal' ? 'var(--accent)' : '#fff',
+                  color: method === 'paypal' ? '#fff' : 'var(--fg)',
+                  border: '1px solid var(--border)',
+                }}>
+          PayPal
+        </button>
+      </div>
+
+      {method === 'paypal' && (
+        <PayPal order={order} token={auth.token}
+                onPaid={() => navigate(`/orders/${id}`)} />
+      )}
+
+      {method === 'card' && (
       <form onSubmit={submit} className="form">
         <label>Cardholder name
           <input required value={form.cardholder_name} onChange={set('cardholder_name')} />
@@ -125,6 +154,7 @@ export default function Payment() {
           {submitting ? 'Processing…' : `Pay ${money(order.total_cents)}`}
         </button>
       </form>
+      )}
     </section>
   )
 }
